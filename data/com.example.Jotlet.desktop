@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Jotlet
+Comment=Lightweight sticky notes for GNOME
+Exec=jotlet
+Icon=com.example.Jotlet
+Terminal=false
+Type=Application
+Categories=Utility;GTK;GNOME;
+Keywords=notes;sticky;todo;
+StartupNotify=true
+X-GNOME-UsesNotifications=false

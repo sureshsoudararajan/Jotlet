@@ -1,0 +1,224 @@
+/* Jotlet — Sticky Notes for GNOME */
+
+/* ============================================
+ * Note window base styling
+ * ============================================ */
+
+.note-window {
+  border-radius: 12px;
+}
+
+.note-header {
+  padding: 4px 8px;
+  min-height: 36px;
+}
+
+.note-title {
+  font-weight: bold;
+  font-size: 14px;
+  color: inherit;
+}
+
+.note-title:focus {
+  background: alpha(currentColor, 0.08);
+  border-radius: 6px;
+}
+
+.note-body {
+  padding: 8px 12px;
+  font-size: 26px;
+  color: inherit;
+}
+
+.note-body text {
+  background: transparent;
+  color: inherit;
+  caret-color: currentColor;
+}
+
+/* ============================================
+ * Formatting toolbar
+ * ============================================ */
+
+.formatting-toolbar {
+  padding: 2px 6px;
+  min-height: 32px;
+  border-top: 1px solid alpha(currentColor, 0.12);
+  color: inherit;
+}
+
+.formatting-toolbar button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 2px;
+  border-radius: 6px;
+  color: inherit;
+}
+
+.formatting-toolbar .toolbar-heading-btn {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.formatting-toolbar .font-size-dropdown {
+  min-height: 26px;
+  font-size: 11px;
+}
+
+.formatting-toolbar button:hover {
+  background: alpha(currentColor, 0.1);
+}
+
+.formatting-toolbar button:checked {
+  background: alpha(currentColor, 0.2);
+}
+
+.formatting-toolbar separator {
+  background-color: alpha(currentColor, 0.15);
+}
+
+/* ============================================
+ * Color picker
+ * ============================================ */
+
+.color-swatch {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  border: 2px solid alpha(currentColor, 0.15);
+  transition: transform 150ms ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+  border-color: alpha(currentColor, 0.4);
+}
+
+.color-swatch.selected {
+  border-color: @accent_color;
+  border-width: 3px;
+}
+
+/* ============================================
+ * Note color themes — Light mode
+ * ============================================ */
+
+.note-color-default .note-header { background-color: #ededed; color: #2e3436; }
+.note-color-default .note-body { background-color: #fafafa; color: #2e3436; }
+.note-color-default .formatting-toolbar { background-color: #ededed; color: #2e3436; }
+
+.note-color-yellow .note-header { background-color: #f7e884; color: #2e3436; }
+.note-color-yellow .note-body { background-color: #fef9e7; color: #2e3436; }
+.note-color-yellow .formatting-toolbar { background-color: #f7e884; color: #2e3436; }
+
+.note-color-cream .note-header { background-color: #ecdcc3; color: #2e3436; }
+.note-color-cream .note-body { background-color: #faf6f0; color: #2e3436; }
+.note-color-cream .formatting-toolbar { background-color: #ecdcc3; color: #2e3436; }
+
+.note-color-blue .note-header { background-color: #b3d2f7; color: #2e3436; }
+.note-color-blue .note-body { background-color: #eef4fc; color: #2e3436; }
+.note-color-blue .formatting-toolbar { background-color: #b3d2f7; color: #2e3436; }
+
+.note-color-green .note-header { background-color: #b0ecc0; color: #2e3436; }
+.note-color-green .note-body { background-color: #eafcef; color: #2e3436; }
+.note-color-green .formatting-toolbar { background-color: #b0ecc0; color: #2e3436; }
+
+.note-color-purple .note-header { background-color: #d8c0ec; color: #2e3436; }
+.note-color-purple .note-body { background-color: #f4ecf9; color: #2e3436; }
+.note-color-purple .formatting-toolbar { background-color: #d8c0ec; color: #2e3436; }
+
+.note-color-pink .note-header { background-color: #f5b7ce; color: #2e3436; }
+.note-color-pink .note-body { background-color: #fceef3; color: #2e3436; }
+.note-color-pink .formatting-toolbar { background-color: #f5b7ce; color: #2e3436; }
+
+.note-color-orange .note-header { background-color: #fad39e; color: #2e3436; }
+.note-color-orange .note-body { background-color: #fff3e0; color: #2e3436; }
+.note-color-orange .formatting-toolbar { background-color: #fad39e; color: #2e3436; }
+
+.note-color-gray .note-header { background-color: #d2d2d0; color: #2e3436; }
+.note-color-gray .note-body { background-color: #f0f0f0; color: #2e3436; }
+.note-color-gray .formatting-toolbar { background-color: #d2d2d0; color: #2e3436; }
+
+/* ============================================
+ * Note color themes — Dark mode (.dark class)
+ * ============================================ */
+
+.dark.note-color-default .note-header { background-color: #383838; color: #f6f5f4; }
+.dark.note-color-default .note-body { background-color: #242424; color: #f6f5f4; }
+.dark.note-color-default .formatting-toolbar { background-color: #2e2e2e; color: #f6f5f4; }
+
+.dark.note-color-yellow .note-header { background-color: #443c12; color: #f6f5f4; }
+.dark.note-color-yellow .note-body { background-color: #2e280c; color: #f6f5f4; }
+.dark.note-color-yellow .formatting-toolbar { background-color: #3b3410; color: #f6f5f4; }
+
+.dark.note-color-cream .note-header { background-color: #3d3527; color: #f6f5f4; }
+.dark.note-color-cream .note-body { background-color: #29241a; color: #f6f5f4; }
+.dark.note-color-cream .formatting-toolbar { background-color: #342d21; color: #f6f5f4; }
+
+.dark.note-color-blue .note-header { background-color: #1b3557; color: #f6f5f4; }
+.dark.note-color-blue .note-body { background-color: #122238; color: #f6f5f4; }
+.dark.note-color-blue .formatting-toolbar { background-color: #172d4a; color: #f6f5f4; }
+
+.dark.note-color-green .note-header { background-color: #183e27; color: #f6f5f4; }
+.dark.note-color-green .note-body { background-color: #10291a; color: #f6f5f4; }
+.dark.note-color-green .formatting-toolbar { background-color: #143421; color: #f6f5f4; }
+
+.dark.note-color-purple .note-header { background-color: #38204b; color: #f6f5f4; }
+.dark.note-color-purple .note-body { background-color: #251532; color: #f6f5f4; }
+.dark.note-color-purple .formatting-toolbar { background-color: #2f1b40; color: #f6f5f4; }
+
+.dark.note-color-pink .note-header { background-color: #461b2c; color: #f6f5f4; }
+.dark.note-color-pink .note-body { background-color: #2e121d; color: #f6f5f4; }
+.dark.note-color-pink .formatting-toolbar { background-color: #3b1725; color: #f6f5f4; }
+
+.dark.note-color-orange .note-header { background-color: #42270e; color: #f6f5f4; }
+.dark.note-color-orange .note-body { background-color: #2c1a09; color: #f6f5f4; }
+.dark.note-color-orange .formatting-toolbar { background-color: #38210c; color: #f6f5f4; }
+
+.dark.note-color-gray .note-header { background-color: #383838; color: #f6f5f4; }
+.dark.note-color-gray .note-body { background-color: #252525; color: #f6f5f4; }
+.dark.note-color-gray .formatting-toolbar { background-color: #2f2f2f; color: #f6f5f4; }
+
+/* ============================================
+ * Note list (overview)
+ * ============================================ */
+
+.note-list-row {
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 2px 6px;
+}
+
+.note-list-row .color-dot {
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 50%;
+}
+
+.note-list-row .note-preview {
+  color: alpha(currentColor, 0.6);
+  font-size: 12px;
+}
+
+.note-list-row .note-timestamp {
+  color: alpha(currentColor, 0.4);
+  font-size: 11px;
+}
+
+/* ============================================
+ * Checklist styling
+ * ============================================ */
+
+.note-body .checklist-item-checked {
+  text-decoration: line-through;
+  color: alpha(currentColor, 0.5);
+}
+
+/* ============================================
+ * Link styling
+ * ============================================ */
+
+.note-body .text-link {
+  color: @accent_color;
+  text-decoration: underline;
+}

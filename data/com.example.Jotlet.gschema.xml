@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="com.example.Jotlet" path="/com/example/Jotlet/">
+
+    <key name="color-scheme" type="s">
+      <default>'system'</default>
+      <summary>Color scheme</summary>
+      <description>The color scheme to use: 'system', 'light', or 'dark'.</description>
+    </key>
+
+    <key name="start-on-login" type="b">
+      <default>true</default>
+      <summary>Start on login</summary>
+      <description>Whether to start the application automatically when the user logs in.</description>
+    </key>
+
+    <key name="restore-notes-on-startup" type="b">
+      <default>true</default>
+      <summary>Restore notes on startup</summary>
+      <description>Whether to restore previously visible notes when the application starts.</description>
+    </key>
+
+    <key name="default-note-color" type="s">
+      <default>'default'</default>
+      <summary>Default note color</summary>
+      <description>The default color for new notes.</description>
+    </key>
+
+    <key name="confirm-delete" type="b">
+      <default>true</default>
+      <summary>Confirm note deletion</summary>
+      <description>Whether to show a confirmation dialog before deleting a note.</description>
+    </key>
+
+    <key name="show-formatting-toolbar" type="b">
+      <default>true</default>
+      <summary>Show formatting toolbar</summary>
+      <description>Whether to show the text formatting toolbar in note windows.</description>
+    </key>
+
+    <key name="default-font-size" type="i">
+      <default>13</default>
+      <summary>Default font size</summary>
+      <description>The default font size for note content in points.</description>
+    </key>
+
+  </schema>
+</schemalist>
