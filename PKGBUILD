@@ -1,10 +1,10 @@
-# Maintainer: Jotlet Contributors <https://github.com/example/jotlet>
+# Maintainer: Suresh Soundararajan <sureshsoundararajan18@gmail.com>
 pkgname=jotlet
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="A lightweight, fast, beautiful, native GNOME Sticky Notes application"
 arch=('x86_64')
-url="https://github.com/example/jotlet"
+url="https://github.com/sureshsoudararajan/Jotlet"
 license=('GPL-3.0-or-later')
 depends=(
     'gtk4'
@@ -16,27 +16,26 @@ makedepends=(
     'rust'
     'cargo'
     'pkgconf'
+    'git'
 )
-source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+source=("$pkgname::git+$url.git")
 sha256sums=('SKIP')
 
-prepare() {
-    cd "$pkgname-$pkgver" || cd "$srcdir"
-    export RUSTUP_TOOLCHAIN=stable
-    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')" 2>/dev/null || cargo fetch
+pkgver() {
+    cd "$pkgname"
+    git describe --long --tags --always 2>/dev/null | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g' || echo "0.1.0"
 }
 
 build() {
-    cd "$pkgname-$pkgver" || cd "$srcdir"
+    cd "$pkgname"
     export RUSTUP_TOOLCHAIN=stable
-    export CARGO_TARGET_DIR=target
-    cargo build --frozen --release --all-targets 2>/dev/null || cargo build --release
+    cargo build --release
 }
 
 check() {
-    cd "$pkgname-$pkgver" || cd "$srcdir"
+    cd "$pkgname"
     export RUSTUP_TOOLCHAIN=stable
-    cargo test --frozen 2>/dev/null || cargo test
+    cargo test
 }
 
 package() {
