@@ -100,6 +100,9 @@ impl NoteWindow {
 
     fn setup_ui(&self) {
         let header_bar = adw::HeaderBar::new();
+        header_bar.set_show_start_title_buttons(false);
+        header_bar.set_show_end_title_buttons(false);
+        header_bar.set_decoration_layout(Some(""));
         header_bar.add_css_class("flat");
         header_bar.add_css_class("note-header");
 
@@ -136,7 +139,7 @@ impl NoteWindow {
 
         let all_notes_btn = gtk::Button::builder()
             .icon_name("view-list-bullet-symbolic")
-            .tooltip_text("All Notes (Overview)")
+            .tooltip_text("All Notes (Ctrl+H)")
             .has_frame(false)
             .build();
         let app_show = self.app.clone();
@@ -155,11 +158,12 @@ impl NoteWindow {
         });
 
         let menu = gio::Menu::new();
-        menu.append(Some("All Notes"), Some("app.show-notes"));
-        menu.append(Some("New Note"), Some("app.new-note"));
+        menu.append(Some("All Notes (Ctrl+H)"), Some("app.show-notes"));
+        menu.append(Some("New Note (Ctrl+N)"), Some("app.new-note"));
         menu.append(Some("Export…"), Some("win.export"));
         menu.append(Some("Preferences"), Some("app.preferences"));
         menu.append(Some("About Jotlet"), Some("app.about"));
+        menu.append(Some("Close Note (Ctrl+W)"), Some("win.close"));
         menu.append(Some("Delete Note"), Some("win.delete"));
 
         let header_menu_btn = gtk::MenuButton::builder()
@@ -199,6 +203,10 @@ impl NoteWindow {
         let note = self.note.borrow();
         self.title_entry.set_text(&note.title);
         self.editor.set_content(&note.content);
+        self.editor.set_font_family(&note.font_family);
+        self.editor.set_font_size(note.font_size);
+        self.toolbar.set_font_family(&note.font_family);
+        self.toolbar.set_font_size(note.font_size);
         self.pin_button.set_active(note.pinned);
     }
 
@@ -236,9 +244,20 @@ impl NoteWindow {
             editor.apply_format(action);
         });
 
+        let editor_font = self.editor.clone();
+        let this_font = self.clone();
+        self.toolbar.connect_font_family_changed(move |family| {
+            editor_font.set_font_family(&family);
+            this_font.note.borrow_mut().font_family = family;
+            this_font.schedule_save();
+        });
+
         let editor2 = self.editor.clone();
+        let this_size = self.clone();
         self.toolbar.connect_font_size_changed(move |size| {
             editor2.set_font_size(size);
+            this_size.note.borrow_mut().font_size = size;
+            this_size.schedule_save();
         });
 
         let this7 = self.clone();
@@ -263,8 +282,15 @@ impl NoteWindow {
             })
             .build();
 
+        let this3 = self.clone();
+        let action_close = gio::ActionEntry::builder("close")
+            .activate(move |_, _, _| {
+                this3.window.close();
+            })
+            .build();
+
         self.window
-            .add_action_entries([action_delete, action_export]);
+            .add_action_entries([action_delete, action_export, action_close]);
     }
 
     fn schedule_save(&self) {
@@ -290,6 +316,8 @@ impl NoteWindow {
             let mut note = self.note.borrow_mut();
             note.title = self.title_entry.text().to_string();
             note.content = self.editor.get_content();
+            note.font_family = self.editor.font_family();
+            note.font_size = self.editor.font_size();
 
             // Record actual allocated window dimensions
             let current_w = self.window.width();
@@ -358,6 +386,17 @@ impl NoteWindow {
     }
 
     fn action_delete(&self) {
+        let confirm = self.app.database().map(|db| {
+            db.with_connection(|conn| {
+                Ok(models::get_bool_setting(conn, "confirm_delete", true))
+            }).unwrap_or(true)
+        }).unwrap_or(true);
+
+        if !confirm {
+            self.delete_note();
+            return;
+        }
+
         let this = self.clone();
         let dialog = adw::AlertDialog::builder()
             .heading("Delete Note?")

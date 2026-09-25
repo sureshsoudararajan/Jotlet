@@ -27,48 +27,27 @@ impl ColorPicker {
         let selected_callbacks: Rc<RefCell<Vec<ColorCallback>>> =
             Rc::new(RefCell::new(Vec::new()));
         let colors = NoteColor::all();
-        let cols = 3;
+        let cols = 5;
 
         for (i, color) in colors.iter().enumerate() {
             let row = (i / cols) as i32;
             let col = (i % cols) as i32;
 
-            let swatch_hex = color.swatch_color().to_string();
-
-            let drawing = gtk::DrawingArea::builder()
-                .width_request(32)
-                .height_request(32)
-                .tooltip_text(color.display_name())
-                .build();
-
-            let hex = swatch_hex.clone();
-            drawing.set_draw_func(move |_, cr, w, h| {
-                if let Ok(rgba) = gtk::gdk::RGBA::parse(&hex) {
-                    cr.set_source_rgba(
-                        rgba.red() as f64,
-                        rgba.green() as f64,
-                        rgba.blue() as f64,
-                        rgba.alpha() as f64,
-                    );
-                } else {
-                    cr.set_source_rgba(0.9, 0.9, 0.9, 1.0);
-                }
-                cr.arc(
-                    w as f64 / 2.0,
-                    h as f64 / 2.0,
-                    14.0,
-                    0.0,
-                    2.0 * std::f64::consts::PI,
-                );
-                let _ = cr.fill();
-            });
-
             let button = gtk::Button::builder()
-                .child(&drawing)
                 .has_frame(false)
                 .tooltip_text(color.display_name())
+                .width_request(32)
+                .height_request(32)
                 .build();
             button.add_css_class("circular");
+            button.add_css_class("color-swatch-btn");
+            button.add_css_class(&format!("swatch-color-{}", color));
+
+            if *color == NoteColor::Wallpaper {
+                let icon = gtk::Image::from_icon_name("preferences-desktop-wallpaper-symbolic");
+                icon.set_pixel_size(16);
+                button.set_child(Some(&icon));
+            }
 
             let color_val = *color;
             let cbs = selected_callbacks.clone();

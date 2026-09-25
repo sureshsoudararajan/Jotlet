@@ -2,7 +2,7 @@ use log::info;
 use rusqlite::Connection;
 
 /// Current schema version.
-const SCHEMA_VERSION: u32 = 1;
+const SCHEMA_VERSION: u32 = 3;
 
 /// Run all pending migrations.
 pub fn run_migrations(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
@@ -15,6 +15,14 @@ pub fn run_migrations(conn: &Connection) -> Result<(), Box<dyn std::error::Error
 
     if current_version < 1 {
         migrate_v1(conn)?;
+    }
+
+    if current_version < 2 {
+        migrate_v2(conn)?;
+    }
+
+    if current_version < 3 {
+        migrate_v3(conn)?;
     }
 
     // Set the current schema version
@@ -44,6 +52,32 @@ fn migrate_v1(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
             created_at  TEXT NOT NULL,
             updated_at  TEXT NOT NULL
         );",
+    )?;
+
+    Ok(())
+}
+
+/// Migration v2: Create settings table for persistent preferences.
+fn migrate_v2(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Running migration v2: creating settings table");
+
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );",
+    )?;
+
+    Ok(())
+}
+
+/// Migration v3: Add font_family and font_size columns to notes table.
+fn migrate_v3(conn: &Connection) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Running migration v3: adding font_family and font_size columns to notes table");
+
+    conn.execute_batch(
+        "ALTER TABLE notes ADD COLUMN font_family TEXT NOT NULL DEFAULT '';
+         ALTER TABLE notes ADD COLUMN font_size INTEGER NOT NULL DEFAULT 26;",
     )?;
 
     Ok(())

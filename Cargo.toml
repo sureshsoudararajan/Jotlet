@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "A lightweight, native GNOME Sticky Notes application"
-repository = "https://github.com/example/jotlet"
+authors = ["Suresh Soundararajan <sureshsoundararajan18@gmail.com>"]
+repository = "https://github.com/sureshsoudararajan/Jotlet"
 readme = "README.md"
 
 [dependencies]

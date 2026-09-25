@@ -19,6 +19,8 @@ pub struct Note {
     pub always_on_top: bool,
     pub is_visible: bool,
     pub is_archived: bool,
+    pub font_family: String,
+    pub font_size: u32,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -40,6 +42,8 @@ impl Note {
             always_on_top: false,
             is_visible: true,
             is_archived: false,
+            font_family: String::new(),
+            font_size: 26,
             created_at: now.clone(),
             updated_at: now,
         }
@@ -66,20 +70,30 @@ impl Note {
             always_on_top: row.get::<_, i32>("always_on_top")? != 0,
             is_visible: row.get::<_, i32>("is_visible")? != 0,
             is_archived: row.get::<_, i32>("is_archived")? != 0,
+            font_family: row
+                .get::<_, Option<String>>("font_family")
+                .unwrap_or(None)
+                .unwrap_or_default(),
+            font_size: row
+                .get::<_, Option<u32>>("font_size")
+                .unwrap_or(None)
+                .unwrap_or(26),
             created_at: row.get("created_at")?,
             updated_at: row.get("updated_at")?,
         })
     }
 
-    /// Returns the plain text preview of the note content (strips HTML).
+    /// Returns the plain text preview of the note content (strips HTML, collapses whitespace).
     pub fn plain_text_preview(&self) -> String {
-        // Simple HTML tag stripping for preview
         let text = regex::Regex::new(r"<[^>]+>")
-            .map(|re| re.replace_all(&self.content, "").to_string())
+            .map(|re| re.replace_all(&self.content, " ").to_string())
             .unwrap_or_else(|_| self.content.clone());
-        let text = text.trim().to_string();
-        if text.len() > 100 {
-            format!("{}…", &text[..100])
+
+        let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+        let chars: Vec<char> = text.chars().collect();
+        if chars.len() > 80 {
+            let truncated: String = chars[..80].iter().collect();
+            format!("{}…", truncated.trim())
         } else {
             text
         }
@@ -100,8 +114,8 @@ impl Default for Note {
 pub fn insert_note(conn: &Connection, note: &Note) -> Result<(), Box<dyn std::error::Error>> {
     conn.execute(
         "INSERT INTO notes (id, title, content, color, x, y, width, height, pinned,
-         always_on_top, is_visible, is_archived, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+         always_on_top, is_visible, is_archived, font_family, font_size, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
         params![
             note.id,
             note.title,
@@ -115,6 +129,8 @@ pub fn insert_note(conn: &Connection, note: &Note) -> Result<(), Box<dyn std::er
             note.always_on_top as i32,
             note.is_visible as i32,
             note.is_archived as i32,
+            note.font_family,
+            note.font_size,
             note.created_at,
             note.updated_at,
         ],
@@ -126,7 +142,7 @@ pub fn insert_note(conn: &Connection, note: &Note) -> Result<(), Box<dyn std::er
 pub fn update_note(conn: &Connection, note: &Note) -> Result<(), Box<dyn std::error::Error>> {
     conn.execute(
         "UPDATE notes SET title=?2, content=?3, color=?4, x=?5, y=?6, width=?7, height=?8,
-         pinned=?9, always_on_top=?10, is_visible=?11, is_archived=?12, updated_at=?13
+         pinned=?9, always_on_top=?10, is_visible=?11, is_archived=?12, font_family=?13, font_size=?14, updated_at=?15
          WHERE id=?1",
         params![
             note.id,
@@ -141,6 +157,8 @@ pub fn update_note(conn: &Connection, note: &Note) -> Result<(), Box<dyn std::er
             note.always_on_top as i32,
             note.is_visible as i32,
             note.is_archived as i32,
+            note.font_family,
+            note.font_size,
             note.updated_at,
         ],
     )?;
@@ -199,3 +217,66 @@ pub fn search_notes(
         .collect::<Result<Vec<_>, _>>()?;
     Ok(notes)
 }
+
+/// Get all pinned (keep-on-top) notes that are not archived.
+pub fn get_pinned_notes(conn: &Connection) -> Result<Vec<Note>, Box<dyn std::error::Error>> {
+    let mut stmt = conn.prepare("SELECT * FROM notes WHERE pinned = 1 AND is_archived = 0 ORDER BY updated_at DESC")?;
+    let notes = stmt
+        .query_map([], Note::from_row)?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(notes)
+}
+
+/// Get a boolean setting from the settings table.
+pub fn get_bool_setting(conn: &Connection, key: &str, default: bool) -> bool {
+    let mut stmt = match conn.prepare("SELECT value FROM settings WHERE key = ?1") {
+        Ok(s) => s,
+        Err(_) => return default,
+    };
+    match stmt.query_row(params![key], |row| row.get::<_, String>(0)) {
+        Ok(val) => val == "true" || val == "1",
+        Err(_) => default,
+    }
+}
+
+/// Set a boolean setting in the settings table.
+pub fn set_bool_setting(
+    conn: &Connection,
+    key: &str,
+    value: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    conn.execute(
+        "INSERT INTO settings (key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        params![key, if value { "true" } else { "false" }],
+    )?;
+    Ok(())
+}
+
+/// Get a string setting from the settings table.
+pub fn get_string_setting(conn: &Connection, key: &str, default: &str) -> String {
+    let mut stmt = match conn.prepare("SELECT value FROM settings WHERE key = ?1") {
+        Ok(s) => s,
+        Err(_) => return default.to_string(),
+    };
+    match stmt.query_row(params![key], |row| row.get::<_, String>(0)) {
+        Ok(val) => val,
+        Err(_) => default.to_string(),
+    }
+}
+
+/// Set a string setting in the settings table.
+pub fn set_string_setting(
+    conn: &Connection,
+    key: &str,
+    value: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    conn.execute(
+        "INSERT INTO settings (key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        params![key, value],
+    )?;
+    Ok(())
+}
+
+

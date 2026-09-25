@@ -3,16 +3,16 @@ use adw::prelude::*;
 pub struct PreferencesWindow;
 
 impl PreferencesWindow {
-    pub fn build() -> adw::PreferencesDialog {
+    pub fn build(app: &crate::application::JotletApplication) -> adw::PreferencesDialog {
         let dialog = adw::PreferencesDialog::builder()
             .title("Preferences")
             .build();
 
-        Self::setup_ui(&dialog);
+        Self::setup_ui(&dialog, app);
         dialog
     }
 
-    fn setup_ui(dialog: &adw::PreferencesDialog) {
+    fn setup_ui(dialog: &adw::PreferencesDialog, app: &crate::application::JotletApplication) {
         // Appearance page
         let appearance_page = adw::PreferencesPage::builder()
             .title("Appearance")
@@ -52,6 +52,115 @@ impl PreferencesWindow {
         appearance_group.add(&theme_row);
         appearance_page.add(&appearance_group);
 
+        // Typography group
+        let typo_group = adw::PreferencesGroup::builder()
+            .title("Typography")
+            .description("Configure the default font for new sticky notes")
+            .build();
+
+        let initial_font_family = app
+            .database()
+            .map(|db| {
+                db.with_connection(|conn| {
+                    Ok(crate::database::models::get_string_setting(
+                        conn,
+                        "default_font_family",
+                        "Default",
+                    ))
+                })
+                .unwrap_or_else(|_| "Default".to_string())
+            })
+            .unwrap_or_else(|| "Default".to_string());
+
+        let font_dialog = gtk::FontDialog::new();
+        let font_btn = gtk::FontDialogButton::new(Some(font_dialog));
+        font_btn.set_use_font(true);
+        font_btn.set_use_size(false);
+        font_btn.set_valign(gtk::Align::Center);
+        if !initial_font_family.is_empty() && initial_font_family != "Default" {
+            let desc = gtk::pango::FontDescription::from_string(&initial_font_family);
+            font_btn.set_font_desc(&desc);
+        }
+
+        let font_row = adw::ActionRow::builder()
+            .title("Default Font Family")
+            .subtitle("Choose the typeface for notes (Adwaita, JetBrains Mono, DejaVu, etc.)")
+            .activatable_widget(&font_btn)
+            .build();
+        font_row.add_suffix(&font_btn);
+
+        let app_font = app.clone();
+        font_btn.connect_font_desc_notify(move |btn| {
+            if let Some(desc) = btn.font_desc() {
+                if let Some(fam) = desc.family() {
+                    let fam_str = fam.to_string();
+                    if let Some(db) = app_font.database() {
+                        let _ = db.with_connection(|conn| {
+                            crate::database::models::set_string_setting(
+                                conn,
+                                "default_font_family",
+                                &fam_str,
+                            )
+                        });
+                    }
+                }
+            }
+        });
+
+        let initial_font_size = app
+            .database()
+            .map(|db| {
+                db.with_connection(|conn| {
+                    Ok(crate::database::models::get_string_setting(
+                        conn,
+                        "default_font_size",
+                        "26",
+                    ))
+                })
+                .unwrap_or_else(|_| "26".to_string())
+            })
+            .unwrap_or_else(|| "26".to_string());
+
+        let size_row = adw::ComboRow::builder()
+            .title("Default Font Size")
+            .subtitle("Select default size for new notes")
+            .build();
+
+        let size_options = &[
+            "14", "16", "18", "20", "22", "24", "26", "28", "32", "36", "48",
+        ];
+        let size_list = gtk::StringList::new(size_options);
+        size_row.set_model(Some(&size_list));
+
+        let size_idx = size_options
+            .iter()
+            .position(|&s| s == initial_font_size)
+            .unwrap_or(6);
+        size_row.set_selected(size_idx as u32);
+
+        let app_size = app.clone();
+        size_row.connect_selected_notify(move |row| {
+            let sizes = [
+                "14", "16", "18", "20", "22", "24", "26", "28", "32", "36", "48",
+            ];
+            let idx = row.selected() as usize;
+            if let Some(&size_val) = sizes.get(idx) {
+                if let Some(db) = app_size.database() {
+                    let _ = db.with_connection(|conn| {
+                        crate::database::models::set_string_setting(
+                            conn,
+                            "default_font_size",
+                            size_val,
+                        )
+                    });
+                }
+            }
+        });
+
+        typo_group.add(&font_row);
+        typo_group.add(&size_row);
+        appearance_page.add(&typo_group);
+
         // General page
         let general_page = adw::PreferencesPage::builder()
             .title("General")
@@ -76,11 +185,27 @@ impl PreferencesWindow {
             }
         });
 
+        let initial_confirm_delete = app.database().map(|db| {
+            db.with_connection(|conn| {
+                Ok(crate::database::models::get_bool_setting(conn, "confirm_delete", true))
+            }).unwrap_or(true)
+        }).unwrap_or(true);
+
         let confirm_delete_row = adw::SwitchRow::builder()
             .title("Confirm before deleting")
             .subtitle("Show a confirmation dialog when deleting notes")
-            .active(true)
+            .active(initial_confirm_delete)
             .build();
+
+        let app_clone = app.clone();
+        confirm_delete_row.connect_active_notify(move |row| {
+            let active = row.is_active();
+            if let Some(db) = app_clone.database() {
+                let _ = db.with_connection(|conn| {
+                    crate::database::models::set_bool_setting(conn, "confirm_delete", active)
+                });
+            }
+        });
 
         behavior_group.add(&start_on_login_row);
         behavior_group.add(&confirm_delete_row);

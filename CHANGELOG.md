@@ -30,4 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Export all notes to JSON backup
   - Import notes from Markdown, Plain Text, and JSON backup
 - **Arch Linux Packaging**: `PKGBUILD` for compiling and installing with `makepkg -si`.
-- **Keyboard Shortcuts**: Quick shortcuts for formatting, searching, note creation, and preferences.
+- **Keyboard Shortcuts**: Quick shortcuts for formatting, searching, note creation (`Ctrl+N`), note closing (`Ctrl+W`), and overview dashboard (`Ctrl+H`).
+- **Typography & Font Engine**:
+  - Full system font discovery via Fontconfig and Pango.
+  - Native GTK4 font dialog (`gtk::FontDialogButton`) to browse and select any system font.
+  - Quick-pick toolbar font dropdown (`Adwaita Sans`, `Adwaita Mono`, `JetBrainsMono Nerd Font`, `DejaVu Sans`, `DejaVu Serif`, `Liberation Sans`, `Noto Sans`, etc.).
+  - Default Font Family and Size in Preferences > Appearance > Typography.
+  - Per-note font family and font size persistence via SQLite Migration v3.
+- **Adaptive Wallpaper Color**: Added Wallpaper (Auto) color mode that dynamically samples the GNOME desktop background and generates harmonized light and dark pastel accents.
+- **Notes Overview Polish**: Default Grid View with pastel cards, modern Card-based List View with color pills and relative dates, and clamped 80-character previews preventing window stretching.
+- **Sticky Note Titlebar Polish**: Cleaned up titlebar by removing minimize/maximize/close buttons from sticky notes, leaving pure note canvas closed via `Ctrl+W` or the menu.
+- **Smart Enter List Continuation**: Pressing Enter on checklists, bullets, or numbered lists automatically continues the list format, and exits cleanly on empty lines.

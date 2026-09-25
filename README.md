@@ -21,26 +21,37 @@ Whether capturing daily logs, command-line snippets, DevOps notes, reminders, or
 
 ## ✨ Features
 
-- **Floating Independent Windows**: Create as many sticky notes as needed, each with its own size, position, and color.
-- **Native GNOME & Libadwaita UI**: Built with GTK4 and Libadwaita widgets, adapting automatically to system dark and light modes.
-- **Rich Text Formatting**:
-  - Bold (`Ctrl+B`), Italic (`Ctrl+I`), Underline (`Ctrl+U`), Strikethrough
-  - Headings
-  - Bulleted lists (`Ctrl+Shift+8`)
-  - Auto-incrementing numbered lists (`Ctrl+Shift+7`)
-  - **Interactive Checklists** (`Ctrl+Shift+9`): Click checkboxes (`☐` ↔ `☑`) to toggle completed status with instant strikethrough styling.
-  - Basic Markdown table templates
-  - Clickable URLs with automatic link detection and browser launching
-- **Subtle Pastel Palette**: 9 custom-crafted colors (Default, Yellow, Cream, Blue, Green, Purple, Pink, Orange, Gray) tuned for both light and dark backgrounds.
+- **Floating Independent Windows**: Create as many sticky notes as needed, each with its own size, position, font, and color.
+- **Native GNOME & Libadwaita UI**: Built with GTK4 and Libadwaita, adapting automatically to system dark and light modes with manual toggle support.
+- **Clutter-Free Sticky Windows**: Distraction-free floating sticky notes with window controls removed from notes (`Ctrl+W` to close).
+- **Typography & System Font Support**:
+  - Full system font discovery via Fontconfig and Pango.
+  - Native GTK4 font picker dialog (`gtk::FontDialogButton`) to browse, preview, and select from all installed system fonts.
+  - Quick-pick toolbar font dropdown (`Adwaita Sans`, `Adwaita Mono`, `JetBrainsMono Nerd Font`, `DejaVu Sans`, `DejaVu Serif`, `Liberation Sans`, `Noto Sans`, etc.).
+  - Configurable font size (14px–48px, default 26px).
+  - Global Default Font Family and Size in Preferences.
+  - Per-note font and size persistence in SQLite.
+- **Smart Formatting & Lists**:
+  - Bold (`Ctrl+B`), Italic (`Ctrl+I`), Underline (`Ctrl+U`), Strikethrough, Heading.
+  - Bulleted lists (`•`) and auto-incrementing numbered lists (`1.`, `2.`, ...).
+  - **Interactive Checklists**: Click checkboxes (`☐` ↔ `☑`) to toggle completed status with clean task strikethrough.
+  - **Smart Enter Continuation**: Automatically continues checklists and lists upon Enter, cleanly exiting on empty lines.
+  - Clickable URLs with automatic link detection and browser launching.
+- **10 Pastel & Wallpaper Color Themes**:
+  - 9 tuned pastel colors (Default, Yellow, Cream, Blue, Green, Purple, Pink, Orange, Gray) tuned for light and dark modes.
+  - **Wallpaper (Auto)**: Dynamically samples your GNOME desktop wallpaper and derives matching light and dark pastel accents.
+- **Notes Overview (Grid & List Views)**:
+  - Default **Grid View** with responsive, pastel note cards.
+  - Modern **Card-based List View** with color pills, bold titles, pin badges, clamped 2-line previews, and timestamps.
+  - Real-time search across note titles and content.
 - **Fast Debounced Auto-Save**: Changes persist automatically after a 500ms debounce interval without locking the UI.
-- **Crash-Resilient SQLite Storage**: Uses SQLite with Write-Ahead Logging (WAL) for transactional, non-destructive persistence.
-- **Background Daemon Architecture**: Closing note windows hides them while keeping the application running in the background. Reopen hidden notes anytime from the Notes Overview.
-- **XDG Autostart**: Optional login startup via `~/.config/autostart/` with `--background` flag support.
-- **Notes Overview & Search**: Dedicated management window with live real-time search across note titles and content.
+- **Crash-Resilient SQLite Storage**: Uses SQLite with Write-Ahead Logging (WAL) and migration tracking.
+- **Background Daemon Architecture**: Closing note windows hides them while keeping the application running in the background. Pinned notes automatically restore on system boot (`--background`).
+- **XDG Autostart**: Optional login startup via `~/.config/autostart/`.
 - **Import & Export**:
-  - Export single notes to Markdown (`.md`), Plain Text (`.txt`), HTML (`.html`), or JSON
-  - Full backup of all notes to a single JSON archive
-  - Import notes from Markdown, Plain Text, or JSON backups
+  - Export single notes to Markdown (`.md`), Plain Text (`.txt`), HTML (`.html`), or JSON.
+  - Full backup of all notes to a single JSON archive.
+  - Import notes from Markdown, Plain Text, or JSON backups.
 - **Zero Telemetry**: 100% offline, privacy-first personal data handling. No network calls, accounts, or telemetry.
 
 ---
@@ -74,8 +85,9 @@ On Wayland, compositors intentionally prevent client applications from positioni
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl + N` | Create a new sticky note |
-| `Ctrl + Shift + N` | Open the Notes Overview window |
-| `Ctrl + F` | Search notes |
+| `Ctrl + W` | Close active note window (persists & hides) |
+| `Ctrl + H` | Open the Notes Overview dashboard |
+| `Ctrl + F` | Search notes in Overview |
 | `Ctrl + ,` | Open Preferences |
 | `Ctrl + B` | Toggle **Bold** |
 | `Ctrl + I` | Toggle *Italic* |
@@ -92,17 +104,18 @@ On Wayland, compositors intentionally prevent client applications from positioni
 
 ## 🎨 Note Color Palette
 
-| Name | Light Background | Dark Background |
-| --- | --- | --- |
-| **Default** | `#fafafa` | `#2d2d2d` |
-| **Yellow** | `#fef9e7` | `#3a3520` |
-| **Cream** | `#faf6f0` | `#3a342a` |
-| **Blue** | `#eef4fc` | `#232f3e` |
-| **Green** | `#eafcef` | `#1e3326` |
-| **Purple** | `#f4ecf9` | `#352440` |
-| **Pink** | `#fceef3` | `#3e2230` |
-| **Orange** | `#fff3e0` | `#3a2a18` |
-| **Gray** | `#f0f0f0` | `#383838` |
+| Name | Light Background | Dark Background | Description |
+| --- | --- | --- | --- |
+| **Default** | `#fafafa` | `#2d2d2d` | Neutral Adwaita background |
+| **Yellow** | `#fef9e7` | `#3a3520` | Classic post-it pastel yellow |
+| **Cream** | `#faf6f0` | `#3a342a` | Warm parchment |
+| **Blue** | `#eef4fc` | `#232f3e` | Calming sky blue |
+| **Green** | `#eafcef` | `#1e3326` | Fresh sage green |
+| **Purple** | `#f4ecf9` | `#352440` | Subtle lavender |
+| **Pink** | `#fceef3` | `#3e2230` | Soft blush pink |
+| **Orange** | `#fff3e0` | `#3a2a18` | Warm peach |
+| **Gray** | `#f0f0f0` | `#383838` | Sleek slate |
+| **Wallpaper (Auto)** | *Adaptive Pastel* | *Adaptive Deep Pastel* | Dynamically samples GNOME desktop wallpaper |
 
 ---
 
@@ -130,8 +143,8 @@ rustup default stable
 ### Build from Source
 
 ```bash
-git clone https://github.com/example/jotlet.git
-cd jotlet
+git clone https://github.com/sureshsoudararajan/Jotlet.git
+cd Jotlet
 
 # Compile debug build
 cargo build
@@ -180,17 +193,27 @@ Jotlet is completely offline software:
 
 - [x] Multiple floating sticky notes
 - [x] SQLite persistence with auto-save
-- [x] Rich text formatting (Bold, Italic, Underline, Strikethrough)
-- [x] Bullet and numbered lists
-- [x] Interactive checklists (`☐` / `☑`)
-- [x] 9 custom pastel color schemes with light/dark adaptations
-- [x] Real-time notes search and overview window
-- [x] Export (Markdown, HTML, Plain Text, JSON) and Import
+- [x] Rich text formatting (Bold, Italic, Underline, Strikethrough, Heading)
+- [x] Bullet and numbered lists with smart Enter continuation
+- [x] Interactive checklists (`☐` / `☑`) with strikeout completion
+- [x] 10 custom pastel and wallpaper-adaptive color schemes
+- [x] System font typography selector and native GTK4 font dialog
+- [x] Real-time notes search, Grid View, and Card-based List View
+- [x] Export (Markdown, HTML, Plain Text, JSON) and Backup Import
 - [x] Login autostart integration
 - [x] Arch Linux PKGBUILD
 - [ ] Inline reminder alarms
 - [ ] Note grouping / tag categories
 - [ ] Export note as PNG / image card
+
+---
+
+## 👤 Author
+
+Developed by **Suresh Soundararajan**  
+- **GitHub**: [@sureshsoudararajan](https://github.com/sureshsoudararajan)  
+- **Repository**: [https://github.com/sureshsoudararajan/Jotlet](https://github.com/sureshsoudararajan/Jotlet)  
+- **Issues & Feedback**: [https://github.com/sureshsoudararajan/Jotlet/issues](https://github.com/sureshsoudararajan/Jotlet/issues)  
 
 ---
 

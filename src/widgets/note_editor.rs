@@ -26,6 +26,8 @@ pub struct NoteEditor {
     buffer: gtk::TextBuffer,
     changed_callbacks: Rc<RefCell<Vec<ChangeCallback>>>,
     font_provider: Rc<RefCell<Option<gtk::CssProvider>>>,
+    font_size: Rc<RefCell<u32>>,
+    font_family: Rc<RefCell<String>>,
 }
 
 impl NoteEditor {
@@ -58,12 +60,16 @@ impl NoteEditor {
         });
 
         let font_provider = Rc::new(RefCell::new(None));
+        let font_size = Rc::new(RefCell::new(26));
+        let font_family = Rc::new(RefCell::new(String::new()));
 
         let editor = Self {
             text_view,
             buffer,
             changed_callbacks,
             font_provider,
+            font_size,
+            font_family,
         };
 
         editor.setup_click_gesture();
@@ -96,16 +102,42 @@ impl NoteEditor {
     }
 
     #[allow(deprecated)]
-    pub fn set_font_size(&self, size: u32) {
+    fn apply_font_css(&self) {
         if let Some(ref old_provider) = *self.font_provider.borrow() {
             self.text_view.style_context().remove_provider(old_provider);
         }
+        let size = *self.font_size.borrow();
+        let family = self.font_family.borrow();
+        let family_rule = if family.is_empty() || *family == "Default" || *family == "Default (System)" {
+            String::new()
+        } else {
+            format!("font-family: '{}', sans-serif;", family)
+        };
+        let css = format!("textview.note-body {{ font-size: {}px; {} }}", size, family_rule);
         let provider = gtk::CssProvider::new();
-        provider.load_from_string(&format!("textview.note-body {{ font-size: {}px; }}", size));
+        provider.load_from_string(&css);
         self.text_view
             .style_context()
             .add_provider(&provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
         *self.font_provider.borrow_mut() = Some(provider);
+    }
+
+    pub fn set_font_size(&self, size: u32) {
+        *self.font_size.borrow_mut() = size;
+        self.apply_font_css();
+    }
+
+    pub fn set_font_family(&self, family: &str) {
+        *self.font_family.borrow_mut() = family.to_string();
+        self.apply_font_css();
+    }
+
+    pub fn font_size(&self) -> u32 {
+        *self.font_size.borrow()
+    }
+
+    pub fn font_family(&self) -> String {
+        self.font_family.borrow().clone()
     }
 
     pub fn apply_format(&self, action: FormatAction) {
@@ -342,6 +374,14 @@ impl NoteEditor {
                         editor.apply_format(FormatAction::Underline);
                         return glib::Propagation::Stop;
                     }
+                    gdk::Key::w | gdk::Key::W => {
+                        if let Some(root) = editor.text_view.root() {
+                            if let Some(win) = root.downcast_ref::<gtk::Window>() {
+                                win.close();
+                                return glib::Propagation::Stop;
+                            }
+                        }
+                    }
                     _ => {}
                 }
             } else if ctrl && shift {
@@ -395,8 +435,7 @@ impl NoteEditor {
         let line_text = self.buffer.text(&line_start, &line_end, true).to_string();
 
         // 1. Checklist items (☐ or ☑)
-        if line_text.starts_with("☐ ") || line_text.starts_with("☑ ") {
-            let content = &line_text[2..];
+        if let Some(content) = line_text.strip_prefix("☐ ").or_else(|| line_text.strip_prefix("☑ ")) {
             if content.trim().is_empty() {
                 // Empty item: delete prefix to exit list mode
                 let mut s = line_start;
@@ -434,8 +473,7 @@ impl NoteEditor {
         }
 
         // 2. Bullet list items (• )
-        if line_text.starts_with("• ") {
-            let content = &line_text[2..];
+        if let Some(content) = line_text.strip_prefix("• ") {
             if content.trim().is_empty() {
                 // Empty item: delete bullet to exit list mode
                 let mut s = line_start;
@@ -455,10 +493,8 @@ impl NoteEditor {
         }
 
         // 3. Numbered list items (<num>. )
-        if let Some(dot_pos) = line_text.find(". ") {
-            let prefix = &line_text[..dot_pos];
+        if let Some((prefix, content)) = line_text.split_once(". ") {
             if !prefix.is_empty() && prefix.chars().all(|c| c.is_ascii_digit()) {
-                let content = &line_text[dot_pos + 2..];
                 if content.trim().is_empty() {
                     // Empty item: delete prefix to exit list mode
                     let mut s = line_start;

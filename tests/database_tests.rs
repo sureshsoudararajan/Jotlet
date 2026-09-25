@@ -18,7 +18,24 @@ fn test_database_creation_and_migration() {
     let version: u32 = conn
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .expect("Failed to query user_version");
-    assert_eq!(version, 1);
+    assert_eq!(version, 3);
+
+    // Test settings table
+    assert!(jotlet::database::models::get_bool_setting(&conn, "confirm_delete", true));
+    jotlet::database::models::set_bool_setting(&conn, "confirm_delete", false)
+        .expect("Failed to set bool setting");
+    assert!(!jotlet::database::models::get_bool_setting(&conn, "confirm_delete", true));
+
+    assert_eq!(
+        jotlet::database::models::get_string_setting(&conn, "overview_view", "list"),
+        "list"
+    );
+    jotlet::database::models::set_string_setting(&conn, "overview_view", "grid")
+        .expect("Failed to set string setting");
+    assert_eq!(
+        jotlet::database::models::get_string_setting(&conn, "overview_view", "list"),
+        "grid"
+    );
 }
 
 #[test]
@@ -28,6 +45,8 @@ fn test_note_insert_and_get() {
     note.title = "Test Note".to_string();
     note.content = "Some content".to_string();
     note.color = NoteColor::Blue;
+    note.font_family = "JetBrainsMono Nerd Font".to_string();
+    note.font_size = 22;
 
     insert_note(&conn, &note).expect("Failed to insert note");
 
@@ -39,6 +58,8 @@ fn test_note_insert_and_get() {
     assert_eq!(retrieved.title, "Test Note");
     assert_eq!(retrieved.content, "Some content");
     assert_eq!(retrieved.color, NoteColor::Blue);
+    assert_eq!(retrieved.font_family, "JetBrainsMono Nerd Font");
+    assert_eq!(retrieved.font_size, 22);
 }
 
 #[test]
@@ -56,6 +77,8 @@ fn test_note_update() {
     note.pinned = true;
     note.width = 450;
     note.height = 400;
+    note.font_family = "DejaVu Serif".to_string();
+    note.font_size = 32;
 
     update_note(&conn, &note).expect("Failed to update note");
 
@@ -69,6 +92,8 @@ fn test_note_update() {
     assert!(retrieved.pinned);
     assert_eq!(retrieved.width, 450);
     assert_eq!(retrieved.height, 400);
+    assert_eq!(retrieved.font_family, "DejaVu Serif");
+    assert_eq!(retrieved.font_size, 32);
 }
 
 #[test]

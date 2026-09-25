@@ -16,8 +16,14 @@ pub const APP_DESCRIPTION: &str = "A lightweight, native GNOME Sticky Notes appl
 /// The GResource path prefix.
 pub const RESOURCE_PATH: &str = "/com/example/Jotlet";
 
+/// The application author.
+pub const APP_AUTHOR: &str = "Suresh Soundararajan";
+
 /// The application website.
-pub const APP_WEBSITE: &str = "https://github.com/example/jotlet";
+pub const APP_WEBSITE: &str = "https://github.com/sureshsoudararajan/Jotlet.git";
+
+/// The application issue tracker.
+pub const APP_ISSUES: &str = "https://github.com/sureshsoudararajan/Jotlet/issues";
 
 /// The application license (SPDX identifier).
 pub const APP_LICENSE_SPDX: &str = "GPL-3.0-or-later";

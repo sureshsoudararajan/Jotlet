@@ -15,6 +15,7 @@ pub enum NoteColor {
     Pink,
     Orange,
     Gray,
+    Wallpaper,
 }
 
 impl NoteColor {
@@ -30,6 +31,7 @@ impl NoteColor {
             NoteColor::Pink,
             NoteColor::Orange,
             NoteColor::Gray,
+            NoteColor::Wallpaper,
         ]
     }
 
@@ -45,6 +47,7 @@ impl NoteColor {
             NoteColor::Pink => "note-color-pink",
             NoteColor::Orange => "note-color-orange",
             NoteColor::Gray => "note-color-gray",
+            NoteColor::Wallpaper => "note-color-wallpaper",
         }
     }
 
@@ -60,6 +63,7 @@ impl NoteColor {
             NoteColor::Pink => "Pink",
             NoteColor::Orange => "Orange",
             NoteColor::Gray => "Gray",
+            NoteColor::Wallpaper => "Wallpaper (Auto)",
         }
     }
 
@@ -75,6 +79,7 @@ impl NoteColor {
             NoteColor::Pink => "#e882a0",
             NoteColor::Orange => "#f0a840",
             NoteColor::Gray => "#b8b7b4",
+            NoteColor::Wallpaper => "#3584e4",
         }
     }
 
@@ -89,6 +94,7 @@ impl NoteColor {
             "pink" => NoteColor::Pink,
             "orange" => NoteColor::Orange,
             "gray" | "grey" => NoteColor::Gray,
+            "wallpaper" | "auto" | "adaptive" => NoteColor::Wallpaper,
             _ => NoteColor::Default,
         }
     }
@@ -106,6 +112,7 @@ impl fmt::Display for NoteColor {
             NoteColor::Pink => "pink",
             NoteColor::Orange => "orange",
             NoteColor::Gray => "gray",
+            NoteColor::Wallpaper => "wallpaper",
         })
     }
 }

@@ -82,6 +82,12 @@ impl JotletApplication {
         info!("Application startup");
         self.load_resources();
         self.load_css();
+
+        if let Some(display) = gtk::gdk::Display::default() {
+            let icon_theme = gtk::IconTheme::for_display(&display);
+            icon_theme.add_resource_path("/com/example/Jotlet/icons/hicolor");
+        }
+
         self.init_database();
         self.setup_actions();
         self.setup_accels();
@@ -98,28 +104,12 @@ impl JotletApplication {
         let is_bg = self.imp().is_background.get();
         self.imp().is_background.set(false);
 
-        let imp = self.imp();
-        let windows = imp.note_windows.borrow();
-        if !windows.is_empty() {
-            if !is_bg {
-                self.show_overview();
-                if let Some(win) = windows.values().next() {
-                    win.present();
-                }
-            }
-            return;
-        }
-        drop(windows);
-
-        self.restore_notes();
-
-        if !is_bg {
+        if is_bg {
+            // System boot / login: restore ONLY pinned notes, do not open overview
+            self.restore_pinned_notes();
+        } else {
+            // Normal launch: open ONLY the notes overview screen
             self.show_overview();
-            let windows = imp.note_windows.borrow();
-            if windows.is_empty() {
-                drop(windows);
-                self.action_new_note();
-            }
         }
     }
 
@@ -139,6 +129,16 @@ impl JotletApplication {
             &provider,
             gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
         );
+
+        let wp_provider = gtk::CssProvider::new();
+        wp_provider.load_from_string(&crate::services::wallpaper::generate_wallpaper_css());
+        if let Some(display) = gtk::gdk::Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &wp_provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            );
+        }
     }
 
     fn init_database(&self) {
@@ -190,7 +190,8 @@ impl JotletApplication {
 
     fn setup_accels(&self) {
         self.set_accels_for_action("app.new-note", &["<Control>n"]);
-        self.set_accels_for_action("app.show-notes", &["<Control><Shift>n"]);
+        self.set_accels_for_action("app.show-notes", &["<Control>h", "<Control><Shift>n"]);
+        self.set_accels_for_action("win.close", &["<Control>w"]);
         self.set_accels_for_action("app.preferences", &["<Control>comma"]);
         self.set_accels_for_action("app.search", &["<Control>f"]);
         self.set_accels_for_action("app.quit", &["<Control>q"]);
@@ -200,7 +201,27 @@ impl JotletApplication {
         self.imp().database.borrow().clone()
     }
 
-    fn restore_notes(&self) {
+    fn restore_pinned_notes(&self) {
+        let Some(db) = self.database() else {
+            error!("No database available for restoring pinned notes");
+            return;
+        };
+
+        match db.with_connection(|conn| {
+            let notes = crate::database::models::get_pinned_notes(conn)?;
+            Ok(notes)
+        }) {
+            Ok(notes) => {
+                info!("Restoring {} pinned notes on login", notes.len());
+                for note in notes {
+                    self.open_note_window(note);
+                }
+            }
+            Err(e) => error!("Failed to restore pinned notes: {}", e),
+        }
+    }
+
+    pub fn restore_notes(&self) {
         let Some(db) = self.database() else {
             error!("No database available for restoring notes");
             return;
@@ -242,9 +263,19 @@ impl JotletApplication {
     }
 
     fn action_new_note(&self) {
-        let note = Note::new();
+        let mut note = Note::new();
         if let Some(db) = self.database() {
             if let Err(e) = db.with_connection(|conn| {
+                let default_fam =
+                    crate::database::models::get_string_setting(conn, "default_font_family", "");
+                let default_size =
+                    crate::database::models::get_string_setting(conn, "default_font_size", "26")
+                        .parse::<u32>()
+                        .unwrap_or(26);
+                if !default_fam.is_empty() && default_fam != "Default" {
+                    note.font_family = default_fam;
+                }
+                note.font_size = default_size;
                 crate::database::models::insert_note(conn, &note)?;
                 Ok(())
             }) {
@@ -277,7 +308,7 @@ impl JotletApplication {
     }
 
     fn action_preferences(&self) {
-        let dialog = crate::windows::preferences::PreferencesWindow::build();
+        let dialog = crate::windows::preferences::PreferencesWindow::build(self);
         let win = self.active_window();
         dialog.present(win.as_ref());
     }
@@ -286,9 +317,11 @@ impl JotletApplication {
         let about = adw::AboutDialog::builder()
             .application_name(config::APP_NAME)
             .version(config::APP_VERSION)
-            .developer_name("Jotlet Contributors")
+            .developer_name(config::APP_AUTHOR)
+            .developers([config::APP_AUTHOR])
             .license_type(gtk::License::Gpl30)
             .website(config::APP_WEBSITE)
+            .issue_url(config::APP_ISSUES)
             .application_icon(config::APP_ID)
             .comments(config::APP_DESCRIPTION)
             .build();
