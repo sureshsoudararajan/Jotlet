@@ -131,36 +131,93 @@ In strict accordance with the [XDG Base Directory Specification](https://specifi
 
 ---
 
-## 🛠️ Installation & Building
+## 🛠️ Installation & Setup (Arch Linux)
 
-### Prerequisites on Arch Linux
+### 1. Prerequisites
+
+Ensure system build tools, GTK4, and Libadwaita are installed:
 
 ```bash
-sudo pacman -S --needed rustup gtk4 libadwaita sqlite pkgconf
+sudo pacman -S --needed rustup gtk4 libadwaita sqlite pkgconf git
 rustup default stable
 ```
 
-### Build from Source
+---
+
+### 2. Installation Options
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/sureshsoudararajan/Jotlet.git
 cd Jotlet
-
-# Compile debug build
-cargo build
-
-# Run directly
-cargo run
-
-# Build optimized release binary
-cargo build --release
 ```
 
-### Install with PKGBUILD (Arch Linux)
+#### Option A: Quick Automated Install (Recommended)
+
+Run the included install script:
 
 ```bash
-cd jotlet
+# System-wide installation (available to all users & desktop app grid):
+sudo ./install.sh
+
+# Or install for your current user only (no root / no password needed):
+./install.sh
+```
+
+**What the installer does automatically:**
+- Compiles the stripped, optimized release binary (`target/release/jotlet`).
+- Installs binary to `/usr/bin/jotlet` (or `~/.local/bin/jotlet`).
+- Registers GNOME desktop entry (`com.example.Jotlet.desktop`).
+- Installs application vector icon (`com.example.Jotlet.svg`).
+- Compiles GSettings preference schema (`com.example.Jotlet.gschema.xml`).
+- Refreshes desktop and icon caches so **Jotlet immediately appears in your GNOME App Grid**.
+
+#### Option B: Native Arch Package (`makepkg`)
+
+Build and install a package managed directly by `pacman`:
+
+```bash
 makepkg -si
+```
+
+#### Option C: Run Without Installing (Development)
+
+Run directly with Cargo:
+
+```bash
+cargo run
+```
+
+---
+
+### 3. Launching Jotlet
+
+- **From GNOME App Grid**: Press the Super key, search for **Jotlet**, and launch.
+- **From Terminal**:
+  ```bash
+  jotlet
+  ```
+- **Silent Background Autostart**:
+  ```bash
+  jotlet --background
+  ```
+
+---
+
+### 4. Uninstallation
+
+If you ever need to remove Jotlet:
+
+```bash
+# If installed via sudo ./install.sh:
+sudo ./uninstall.sh
+
+# If installed via ./install.sh:
+./uninstall.sh
+
+# If installed via makepkg:
+sudo pacman -R jotlet
 ```
 
 ---
