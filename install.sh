@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 set -e
 
-echo "==> Building Jotlet (release profile)..."
-cargo build --release
+# Ensure release binary exists or build it
+if [ ! -f "target/release/jotlet" ]; then
+    echo "==> Building Jotlet (release profile)..."
+    if [ -n "$SUDO_USER" ] && [ "$EUID" -eq 0 ]; then
+        sudo -u "$SUDO_USER" cargo build --release
+    else
+        cargo build --release
+    fi
+else
+    echo "==> Using release binary: target/release/jotlet"
+    # Attempt rebuild if cargo is available to get freshest code, but don't fail if root lacks toolchain
+    if [ -n "$SUDO_USER" ] && [ "$EUID" -eq 0 ]; then
+        sudo -u "$SUDO_USER" cargo build --release 2>/dev/null || true
+    fi
+fi
 
 # Determine target prefix
 if [ "$EUID" -eq 0 ]; then
